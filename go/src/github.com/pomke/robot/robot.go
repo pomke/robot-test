@@ -120,8 +120,9 @@ func (self *Robot) Move() error {
     return errors.New("Move invalid")
 }
 
-func (self *Robot) Report() {
+func (self *Robot) Report() (x int, y int, heading string) {
     fmt.Printf("%d,%d,%s", self.x, self.y, self.heading)
+    return self.x, self.y, self.heading
 }
 
 
@@ -139,7 +140,7 @@ type Controller struct {
     robot *Robot
 }
 
-func (self *Controller) DoCommand(s string) {
+func (self *Controller) DoCommand(s string) error {
     /* DoCommand takes a string and attempts to match it with a valid robot
      * command:
      *
@@ -157,12 +158,16 @@ func (self *Controller) DoCommand(s string) {
 
     if s == "MOVE" {
         self.robot.Move()
+        return nil
     } else if s == "LEFT" {
         self.robot.Left()
+        return nil
     } else if s == "RIGHT" {
         self.robot.Right()
+        return nil
     } else if s == "REPORT" {
         self.robot.Report()
+        return nil
     } else if strings.HasPrefix(s, "PLACE") {
         bits := strings.Split(s, " ")
         if len(bits) == 2 {
@@ -172,10 +177,11 @@ func (self *Controller) DoCommand(s string) {
                 x, _ := strconv.ParseInt(args[0], 10, 0)
                 y, _ := strconv.ParseInt(args[1], 10, 0)
                 self.robot.Place(int(x), int(y), args[2])
+                return nil
             }
         }
-
     }
+    return errors.New("Invalid command")
 }
 
 
