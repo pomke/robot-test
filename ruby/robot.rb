@@ -16,6 +16,7 @@ class Table
 
     # initialize a table with an array of floating point coordinates
     def initialize x=5, y=5
+        @inventory = []
         @squares = []
         (0..x-1).each do |i|
             (0..y-1).each do |ii|
@@ -25,10 +26,17 @@ class Table
     end
 
     # Check if given coordinate is on the table
-    def inBounds? x, y
-        return @squares.include? mkFloat x, y
+    def isMoveValid? x, y
+        coord = mkFloat x, y
+        if @squares.include?(coord) && !@inventory.include?(coord) then
+          return true
+        end
+        return false
     end
 
+   def place x, y
+     @inventory << mkFloat(x, y)
+   end
 end
 
 # I am a Robot that can safely navigate a Table, I require
@@ -43,13 +51,39 @@ class Robot
         @pos = @heading = nil
     end
 
+    def placeObject
+      #place an object on the table in front of the robot
+        # where would the object land?
+       x, y = nextCoord
+       if @table.isMoveValid? x, y then
+         @table.place(x,y)
+       else
+         raise "Invalid location for object"
+       end
+    end
+
+    def nextCoord
+        #return an array of [x, y] for the next position based on heading
+        x, y = mkCoords @pos
+        if @heading == "NORTH" then
+            y+=1
+        elsif @heading == "EAST" then
+            x+=1
+        elsif @heading == "SOUTH" then
+            y-=1
+        elsif @heading == "WEST" then
+            x-=1
+        end
+        return [x, y]
+    end
+
     # Set me at a given position on the table
     def place x, y, heading
         if !DIRECTIONS.include? heading then
             raise "Invalid Heading"
         end
 
-        if !@table.inBounds? x, y then
+        if !@table.isMoveValid? x, y then
             raise "Move Invalid"
         end
 
@@ -83,20 +117,8 @@ class Robot
         if !@pos then
             raise "Not on the table yet"
         end
-        
-        # calculate where we'd end up if we move
-        x, y = mkCoords @pos
-        if @heading == "NORTH" then
-            y+=1
-        elsif @heading == "EAST" then
-            x+=1
-        elsif @heading == "SOUTH" then
-            y-=1
-        elsif @heading == "WEST" then
-            x-=1
-        end
-
-        if @table.inBounds? x, y then
+        x, y = nextCoord
+        if @table.isMoveValid? x, y then
             @pos = mkFloat x, y
         else
             raise "Move Invalid"
@@ -128,6 +150,12 @@ class RobotController
         if string == "MOVE" then
             begin
                 @robot.move
+            rescue RuntimeError
+                #pass silently
+            end
+        elsif string == "PLACE_OBJECT" then
+            begin
+                @robot.placeObject
             rescue RuntimeError
                 #pass silently
             end

@@ -6,9 +6,11 @@ class TestTable < Test::Unit::TestCase
     # test that a table knows it's boundaries
     def test_boundaries
         t = Table.new 2,2
-        assert t.inBounds? 1,1
-        assert t.inBounds? 0,1
-        assert !t.inBounds?(2,1)
+        assert t.isMoveValid? 1,1
+        assert t.isMoveValid? 0,1
+        assert !t.isMoveValid?(2,1)
+        t.place(0,0)
+        assert !t.isMoveValid?(0,0)
     end
 
 end
